@@ -1,15 +1,17 @@
 package com.example.library_management.controller;
 
+import com.example.library_management.dto.BookDTO;
+import com.example.library_management.mapper.BookMapper;
 import com.example.library_management.model.Book;
 import com.example.library_management.service.BookService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/books")
@@ -22,35 +24,21 @@ public class BookController {
         this.bookService = bookService;
     }
 
-    // 🔹 Add a new book (Only Admin can access)
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping("/add")
     @Operation(summary = "Add a new book", description = "Admin only")
-    public Book addBook(@RequestBody Book book) {
-        return bookService.addBook(book);
+    public BookDTO addBook(@RequestBody BookDTO bookDTO) {
+        Book book = BookMapper.INSTANCE.toBook(bookDTO);
+        Book savedBook = bookService.addBook(book);
+        return BookMapper.INSTANCE.toBookDTO(savedBook);
     }
 
-    // 🔹 Search books by title or author (Public access)
     @GetMapping("/search")
     @Operation(summary = "Search books", description = "Search by title or author")
-    public List<Book> searchBooks(@RequestParam(required = false) String title,
-                                  @RequestParam(required = false) String author) {
-        return bookService.searchBooks(title, author);
-    }
-
-    // 🔹 Add a book to the user's favorite list (Only User can access)
-    @PreAuthorize("hasAuthority('USER')")
-    @PostMapping("/favorite/{bookId}")
-    @Operation(summary = "Add book to favorites", description = "Users can mark books as favorite")
-    public String addFavoriteBook(@PathVariable Long bookId) {
-        return bookService.addFavoriteBook(bookId);
-    }
-
-    // 🔹 Get all favorite books of the logged-in user
-    @PreAuthorize("hasAuthority('USER')")
-    @GetMapping("/favorites")
-    @Operation(summary = "Get favorite books", description = "Returns all favorite books of the user")
-    public Set<Book> getUserFavoriteBooks() {
-        return bookService.getUserFavoriteBooks();
+    public List<BookDTO> searchBooks(@RequestParam(required = false) String title,
+                                     @RequestParam(required = false) String author) {
+        return bookService.searchBooks(title, author).stream()
+                .map(BookMapper.INSTANCE::toBookDTO)
+                .collect(Collectors.toList());
     }
 }

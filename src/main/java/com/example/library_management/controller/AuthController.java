@@ -1,5 +1,7 @@
 package com.example.library_management.controller;
 
+import com.example.library_management.dto.UserDTO;
+import com.example.library_management.mapper.UserMapper;
 import com.example.library_management.model.Role;
 import com.example.library_management.model.User;
 import com.example.library_management.repository.UserRepository;
@@ -7,7 +9,6 @@ import com.example.library_management.security.JwtUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -29,10 +30,11 @@ public class AuthController {
 
     @PostMapping("/register")
     @Operation(summary = "Register a new user", description = "Creates a new user account")
-    public String register(@RequestBody User user) {
+    public String register(@RequestBody UserDTO userDTO) {
+        User user = UserMapper.INSTANCE.toUser(userDTO);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        
-        // Allow only one admin
+
+        // Assign role automatically
         if (user.getUsername().equals("admin")) {
             user.setRole(Role.ADMIN);
         } else {
@@ -47,7 +49,7 @@ public class AuthController {
     @Operation(summary = "User login", description = "Logs in a user and returns a JWT token")
     public String login(@RequestParam String username, @RequestParam String password) {
         Optional<User> userOptional = userRepository.findByUsername(username);
-        
+
         if (userOptional.isPresent() && passwordEncoder.matches(password, userOptional.get().getPassword())) {
             return jwtUtil.generateToken(username);
         }
