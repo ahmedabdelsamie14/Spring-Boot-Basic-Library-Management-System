@@ -7,9 +7,10 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Date;
 
+@Component
 public class JwtUtil {
-    private final String SECRET_KEY = "AsjkdsHFKJ743hkKDSLMCUisoJDSLKJ:FLK"; 
-    private final long EXPIRATION_TIME = 86400000;
+    private static final String SECRET_KEY = "AsjkdsHFKJ743hkKDSLMCUisoJDSLKJ:FLK"; 
+    private static final long EXPIRATION_TIME = 86400000; // 1 day
 
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
